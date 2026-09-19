@@ -1,0 +1,613 @@
+/* ============================================================
+   GLOBAL
+============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+
+    background: #f4f7fb;
+    color: #172033;
+
+    min-height: 100vh;
+}
+
+
+/* ============================================================
+   HEADER
+============================================================ */
+
+.header {
+    background: linear-gradient(
+        135deg,
+        #101828,
+        #1d3557
+    );
+
+    color: white;
+
+    padding: 28px 6%;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+}
+
+.header h1 {
+    font-size: 30px;
+
+    margin-bottom: 6px;
+}
+
+.header p {
+    color: #cbd5e1;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   API STATUS
+============================================================ */
+
+.status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    padding: 10px 16px;
+
+    border-radius: 20px;
+
+    font-size: 14px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+}
+
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+
+.dashboard {
+    width: 88%;
+
+    max-width: 1250px;
+
+    margin: 35px auto;
+}
+
+
+/* ============================================================
+   CARD
+============================================================ */
+
+.card {
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 30px;
+
+    margin-bottom: 25px;
+
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
+
+    border: 1px solid #e5eaf0;
+}
+
+
+/* ============================================================
+   SECTION TITLE
+============================================================ */
+
+.section-title {
+    margin-bottom: 25px;
+}
+
+.section-title h2 {
+    font-size: 22px;
+
+    margin-bottom: 7px;
+}
+
+.section-title p {
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   INPUT GRID
+============================================================ */
+
+.input-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 18px;
+}
+
+.input-group {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.input-group label {
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #475569;
+}
+
+.input-group input {
+    width: 100%;
+
+    padding: 12px 13px;
+
+    border: 1px solid #d7dee8;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+
+    outline: none;
+
+    background: #fbfcfe;
+
+    transition: 0.2s;
+}
+
+.input-group input:focus {
+    border-color: #3563e9;
+
+    box-shadow:
+        0 0 0 3px rgba(53, 99, 233, 0.1);
+
+    background: white;
+}
+
+
+/* ============================================================
+   PREDICT BUTTON
+============================================================ */
+
+.predict-button {
+    width: 100%;
+
+    margin-top: 28px;
+
+    padding: 15px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #4f46e5
+    );
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.predict-button:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+.predict-button:active {
+    transform: translateY(0);
+}
+
+
+/* ============================================================
+   RESULTS
+============================================================ */
+
+.results-section {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 25px;
+
+    margin-bottom: 25px;
+}
+
+.result-card {
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 28px;
+
+    border: 1px solid #e5eaf0;
+
+    box-shadow:
+        0 8px 30px rgba(15, 23, 42, 0.07);
+}
+
+
+/* ============================================================
+   RESULT HEADER
+============================================================ */
+
+.result-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    margin-bottom: 25px;
+}
+
+.model-label {
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+
+    color: #64748b;
+}
+
+.result-header h2 {
+    margin-top: 6px;
+
+    font-size: 22px;
+}
+
+
+/* ============================================================
+   PREDICTION BADGE
+============================================================ */
+
+.prediction-badge {
+    padding: 8px 13px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    background: #e2e8f0;
+
+    color: #475569;
+}
+
+.prediction-badge.stable {
+    background: #dcfce7;
+
+    color: #166534;
+}
+
+.prediction-badge.unstable {
+    background: #fee2e2;
+
+    color: #991b1b;
+}
+
+
+/* ============================================================
+   RELIABILITY
+============================================================ */
+
+.reliability {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 18px;
+
+    border-radius: 12px;
+
+    background: #f8fafc;
+
+    margin-bottom: 25px;
+}
+
+.reliability span {
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+.reliability strong {
+    font-size: 28px;
+}
+
+
+/* ============================================================
+   PROBABILITY
+============================================================ */
+
+.probability-container {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.probability-row {
+    display: flex;
+
+    justify-content: space-between;
+
+    font-size: 14px;
+}
+
+.probability-row span {
+    color: #475569;
+}
+
+.probability-row strong {
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   PROGRESS BAR
+============================================================ */
+
+.progress-bar {
+    width: 100%;
+
+    height: 9px;
+
+    background: #e9eef5;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+
+    width: 0%;
+
+    border-radius: 20px;
+
+    transition: width 0.5s ease;
+}
+
+.stable-fill {
+    background: #22c55e;
+}
+
+.unstable-fill {
+    background: #ef4444;
+}
+
+
+/* ============================================================
+   INFO CARDS
+============================================================ */
+
+.info-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 18px;
+
+    margin-bottom: 25px;
+}
+
+.info-card {
+    background: white;
+
+    border: 1px solid #e5eaf0;
+
+    border-radius: 14px;
+
+    padding: 18px;
+
+    display: flex;
+
+    gap: 13px;
+
+    align-items: center;
+
+    box-shadow:
+        0 5px 20px rgba(15, 23, 42, 0.05);
+}
+
+.info-icon {
+    font-size: 24px;
+}
+
+.info-card strong {
+    display: block;
+
+    font-size: 14px;
+
+    margin-bottom: 4px;
+}
+
+.info-card p {
+    font-size: 12px;
+
+    color: #64748b;
+}
+
+
+/* ============================================================
+   PERFORMANCE
+============================================================ */
+
+.performance-card {
+    margin-bottom: 30px;
+}
+
+.metrics-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 18px;
+}
+
+.metric {
+    padding: 20px;
+
+    background: #f8fafc;
+
+    border-radius: 12px;
+
+    text-align: center;
+}
+
+.metric span {
+    display: block;
+
+    font-size: 12px;
+
+    color: #64748b;
+
+    margin-bottom: 8px;
+}
+
+.metric strong {
+    font-size: 24px;
+}
+
+
+/* ============================================================
+   FOOTER
+============================================================ */
+
+footer {
+    background: #101828;
+
+    color: #94a3b8;
+
+    text-align: center;
+
+    padding: 25px;
+
+    font-size: 12px;
+
+    line-height: 1.8;
+}
+
+
+/* ============================================================
+   RESPONSIVE DESIGN
+============================================================ */
+
+@media (max-width: 900px) {
+
+    .input-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .results-section {
+        grid-template-columns:
+            1fr;
+    }
+
+    .info-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .metrics-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .header {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+    }
+
+    .dashboard {
+        width: 94%;
+
+        margin-top: 20px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .input-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .info-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .metrics-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+}

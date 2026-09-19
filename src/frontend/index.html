@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Grid AI Reliability Prediction</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="header">
+
+        <div>
+            <h1>⚡ Smart Grid AI</h1>
+
+            <p>
+                AI-Based Reliability Prediction Framework
+            </p>
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            API Connected
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN DASHBOARD
+    ====================================================== -->
+
+    <main class="dashboard">
+
+        <!-- =================================================
+             INPUT SECTION
+        ================================================== -->
+
+        <section class="card">
+
+            <div class="section-title">
+
+                <h2>Smart Grid Parameters</h2>
+
+                <p>
+                    Enter the 12 grid parameters to predict
+                    system stability.
+                </p>
+
+            </div>
+
+
+            <div class="input-grid">
+
+                <!-- Tau parameters -->
+
+                <div class="input-group">
+                    <label for="tau1">τ1</label>
+                    <input
+                        type="number"
+                        id="tau1"
+                        step="any"
+                        value="2.959060"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="tau2">τ2</label>
+                    <input
+                        type="number"
+                        id="tau2"
+                        step="any"
+                        value="3.079885"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="tau3">τ3</label>
+                    <input
+                        type="number"
+                        id="tau3"
+                        step="any"
+                        value="8.381025"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="tau4">τ4</label>
+                    <input
+                        type="number"
+                        id="tau4"
+                        step="any"
+                        value="9.780754"
+                    >
+                </div>
+
+
+                <!-- P parameters -->
+
+                <div class="input-group">
+                    <label for="p1">p1</label>
+                    <input
+                        type="number"
+                        id="p1"
+                        step="any"
+                        value="3.763085"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="p2">p2</label>
+                    <input
+                        type="number"
+                        id="p2"
+                        step="any"
+                        value="-0.782604"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="p3">p3</label>
+                    <input
+                        type="number"
+                        id="p3"
+                        step="any"
+                        value="-1.257395"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="p4">p4</label>
+                    <input
+                        type="number"
+                        id="p4"
+                        step="any"
+                        value="-1.723086"
+                    >
+                </div>
+
+
+                <!-- G parameters -->
+
+                <div class="input-group">
+                    <label for="g1">g1</label>
+                    <input
+                        type="number"
+                        id="g1"
+                        step="any"
+                        value="0.650456"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="g2">g2</label>
+                    <input
+                        type="number"
+                        id="g2"
+                        step="any"
+                        value="0.859578"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="g3">g3</label>
+                    <input
+                        type="number"
+                        id="g3"
+                        step="any"
+                        value="0.887445"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="g4">g4</label>
+                    <input
+                        type="number"
+                        id="g4"
+                        step="any"
+                        value="0.958034"
+                    >
+                </div>
+
+            </div>
+
+
+            <button
+                class="predict-button"
+                onclick="makePrediction()"
+            >
+                ⚡ Predict Grid Reliability
+            </button>
+
+        </section>
+
+
+        <!-- =================================================
+             RESULTS SECTION
+        ================================================== -->
+
+        <section
+            class="results-section"
+            id="results"
+        >
+
+            <!-- GNN RESULT -->
+
+            <div class="result-card gnn-card">
+
+                <div class="result-header">
+
+                    <div>
+
+                        <span class="model-label">
+                            GRAPH NEURAL NETWORK
+                        </span>
+
+                        <h2>GNN Prediction</h2>
+
+                    </div>
+
+                    <div
+                        id="gnn-status"
+                        class="prediction-badge"
+                    >
+                        Waiting
+                    </div>
+
+                </div>
+
+
+                <div class="reliability">
+
+                    <span>
+                        Reliability Score
+                    </span>
+
+                    <strong id="gnn-reliability">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="probability-container">
+
+                    <div class="probability-row">
+
+                        <span>
+                            Stable
+                        </span>
+
+                        <strong id="gnn-stable">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            id="gnn-stable-bar"
+                            class="progress-fill stable-fill"
+                        ></div>
+
+                    </div>
+
+
+                    <div class="probability-row">
+
+                        <span>
+                            Unstable
+                        </span>
+
+                        <strong id="gnn-unstable">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            id="gnn-unstable-bar"
+                            class="progress-fill unstable-fill"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RANDOM FOREST RESULT -->
+
+            <div class="result-card rf-card">
+
+                <div class="result-header">
+
+                    <div>
+
+                        <span class="model-label">
+                            TRADITIONAL ML BASELINE
+                        </span>
+
+                        <h2>Random Forest</h2>
+
+                    </div>
+
+                    <div
+                        id="rf-status"
+                        class="prediction-badge"
+                    >
+                        Waiting
+                    </div>
+
+                </div>
+
+
+                <div class="probability-container">
+
+                    <div class="probability-row">
+
+                        <span>
+                            Stable
+                        </span>
+
+                        <strong id="rf-stable">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            id="rf-stable-bar"
+                            class="progress-fill stable-fill"
+                        ></div>
+
+                    </div>
+
+
+                    <div class="probability-row">
+
+                        <span>
+                            Unstable
+                        </span>
+
+                        <strong id="rf-unstable">
+                            --%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            id="rf-unstable-bar"
+                            class="progress-fill unstable-fill"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SYSTEM INFORMATION
+        ================================================== -->
+
+        <section class="info-grid">
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    🧠
+                </span>
+
+                <div>
+
+                    <strong>
+                        GNN Model
+                    </strong>
+
+                    <p>
+                        Graph Convolutional Network
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    🌲
+                </span>
+
+                <div>
+
+                    <strong>
+                        Baseline
+                    </strong>
+
+                    <p>
+                        Random Forest Classifier
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    🔗
+                </span>
+
+                <div>
+
+                    <strong>
+                        Graph
+                    </strong>
+
+                    <p>
+                        10,000 nodes · 80,000 edges
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    ☁️
+                </span>
+
+                <div>
+
+                    <strong>
+                        API
+                    </strong>
+
+                    <p>
+                        Flask · Port 9000
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MODEL PERFORMANCE
+        ================================================== -->
+
+        <section class="card performance-card">
+
+            <div class="section-title">
+
+                <h2>Model Performance</h2>
+
+                <p>
+                    Evaluation on the held-out test set.
+                </p>
+
+            </div>
+
+
+            <div class="metrics-grid">
+
+                <div class="metric">
+
+                    <span>
+                        GNN Accuracy
+                    </span>
+
+                    <strong>
+                        85.13%
+                    </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span>
+                        GNN F1 Score
+                    </span>
+
+                    <strong>
+                        88.78%
+                    </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span>
+                        RF Accuracy
+                    </span>
+
+                    <strong>
+                        92.67%
+                    </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span>
+                        RF F1 Score
+                    </span>
+
+                    <strong>
+                        94.36%
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer>
+
+        <p>
+            AI-Based Reliability Prediction Framework
+            for Smart Grid Cloud Applications
+        </p>
+
+        <p>
+            GNN • Machine Learning • Cloud Architecture
+        </p>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+AI-Based Reliability Prediction Framework
+Smart Grid GNN Results
+========================================
+
+Accuracy: 0.8513
+Precision: 0.8563
+Recall: 0.9216
+F1 Score: 0.8878
+
+Confusion Matrix:
+[[395 148]
+ [ 75 882]]

@@ -1,0 +1,11 @@
+Random Forest Baseline Results
+========================================
+
+Accuracy: 0.9267
+Precision: 0.9265
+Recall: 0.9613
+F1 Score: 0.9436
+
+Confusion Matrix:
+[[470  73]
+ [ 37 920]]
