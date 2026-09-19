@@ -1,4 +1,7 @@
-const API_URL = "http://127.0.0.1:9000";
+const API_URL = "http://54.234.211.0:9000";
+
+const LAMBDA_API_URL =
+    "https://q16uqkqopf.execute-api.us-east-1.amazonaws.com/smartgrid-prediction-trigger";
 
 const FEATURE_NAMES = [
     "tau1",
@@ -74,6 +77,46 @@ async function predictFeatures(features) {
 
 
 // ============================================================
+// ============================================================
+// SEND CURRENT VALUES TO AWS LAMBDA
+// ============================================================
+
+async function sendToAWSLambda(features) {
+
+    try {
+
+        const response = await fetch(
+            LAMBDA_API_URL,
+            {
+                method: "POST",
+
+                // text/plain avoids unnecessary CORS preflight
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+
+                body: JSON.stringify(features)
+            }
+        );
+
+        const result = await response.json();
+
+        console.log("AWS Lambda result:", result);
+
+        return result;
+
+    } catch (error) {
+
+        console.error(
+            "AWS Lambda error:",
+            error
+        );
+
+        return null;
+    }
+}
+
+
 // MAIN PREDICTION
 // ============================================================
 
@@ -98,6 +141,9 @@ async function runPrediction() {
         displayPrediction(result);
 
         displayAdvancedResults(result);
+
+        // Send the SAME current website values to AWS Lambda
+        sendToAWSLambda(features);
 
     }
 
