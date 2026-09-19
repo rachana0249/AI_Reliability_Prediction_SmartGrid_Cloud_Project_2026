@@ -1,99 +1,103 @@
 import os
-import sys
-
-import joblib
 import numpy as np
 import torch
+import joblib
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
 from sklearn.neighbors import NearestNeighbors
-from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
-import torch.nn.functional as F
 
-
-# ============================================================
-# 1. FLASK SETUP
-# ============================================================
 
 app = Flask(__name__)
 CORS(app)
 
 
 # ============================================================
-# 2. PATHS
+# PATHS
 # ============================================================
 
-GRAPH_FILE = "dataset/processed/smart_grid_graph.pt"
-SCALER_FILE = "dataset/processed/scaler.pkl"
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../..")
+)
 
-GNN_MODEL_FILE = "results/models/smart_grid_gnn_model.pt"
-RF_MODEL_FILE = "results/models/random_forest_model.pkl"
+GRAPH_PATH = os.path.join(
+    BASE_DIR,
+    "dataset",
+    "processed",
+    "smart_grid_graph.pt"
+)
+
+SCALER_PATH = os.path.join(
+    BASE_DIR,
+    "dataset",
+    "processed",
+    "scaler.pkl"
+)
+
+GNN_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "results",
+    "models",
+    "smart_grid_gnn_model.pt"
+)
+
+RF_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "results",
+    "models",
+    "random_forest_model.pkl"
+)
 
 
 # ============================================================
-# 3. FEATURE NAMES
+# FEATURES
 # ============================================================
 
-FEATURES = [
-    "tau1", "tau2", "tau3", "tau4",
-    "p1", "p2", "p3", "p4",
-    "g1", "g2", "g3", "g4"
+FEATURE_NAMES = [
+    "tau1",
+    "tau2",
+    "tau3",
+    "tau4",
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "g1",
+    "g2",
+    "g3",
+    "g4"
 ]
 
 
 # ============================================================
-# 4. DEVICE
+# GNN
 # ============================================================
 
-device = torch.device("cpu")
-
-
-# ============================================================
-# 5. LOAD SCALER
-# ============================================================
-
-print("Loading scaler...")
-
-scaler = joblib.load(
-    SCALER_FILE
-)
-
-
-# ============================================================
-# 6. LOAD RANDOM FOREST
-# ============================================================
-
-print("Loading Random Forest...")
-
-rf_model = joblib.load(
-    RF_MODEL_FILE
-)
-
-
-# ============================================================
-# 7. GNN MODEL DEFINITION
-# ============================================================
-
-class GCN(torch.nn.Module):
+class SmartGridGCN(torch.nn.Module):
 
     def __init__(
         self,
-        input_channels,
-        hidden_channels,
-        output_channels
+        input_dim,
+        hidden_dim=32,
+        output_dim=2
     ):
+
         super().__init__()
 
         self.conv1 = GCNConv(
-            input_channels,
-            hidden_channels
+            input_dim,
+            hidden_dim
         )
 
         self.conv2 = GCNConv(
-            hidden_channels,
-            output_channels
+            hidden_dim,
+            output_dim
+        )
+
+        self.dropout = torch.nn.Dropout(
+            0.30
         )
 
     def forward(
@@ -107,7 +111,9 @@ class GCN(torch.nn.Module):
             edge_index
         )
 
-        x = F.relu(x)
+        x = torch.relu(x)
+
+        x = self.dropout(x)
 
         x = self.conv2(
             x,
@@ -118,41 +124,48 @@ class GCN(torch.nn.Module):
 
 
 # ============================================================
-# 8. LOAD ORIGINAL GRAPH
+# LOAD DATA / MODELS
 # ============================================================
 
-print("Loading graph...")
+print("Loading Smart Grid AI models...")
 
-graph = torch.load(
-    GRAPH_FILE,
+
+graph_data = torch.load(
+    GRAPH_PATH,
+    map_location="cpu",
     weights_only=False
 )
 
-graph = graph.to(device)
+scaler = joblib.load(
+    SCALER_PATH
+)
+
+rf_model = joblib.load(
+    RF_MODEL_PATH
+)
 
 
-# ============================================================
-# 9. LOAD GNN
-# ============================================================
+INPUT_DIM = graph_data.x.shape[1]
 
-print("Loading GNN model...")
 
-gnn_model = GCN(
-    input_channels=12,
-    hidden_channels=32,
-    output_channels=2
-).to(device)
+gnn_model = SmartGridGCN(
+    input_dim=INPUT_DIM,
+    hidden_dim=32,
+    output_dim=2
+)
 
 
 checkpoint = torch.load(
-    GNN_MODEL_FILE,
-    map_location=device,
-    weights_only=True
+    GNN_MODEL_PATH,
+    map_location="cpu",
+    weights_only=False
 )
 
-# Our saved model contains model_state_dict
 
-if "model_state_dict" in checkpoint:
+if (
+    isinstance(checkpoint, dict)
+    and "model_state_dict" in checkpoint
+):
 
     gnn_model.load_state_dict(
         checkpoint["model_state_dict"]
@@ -168,355 +181,714 @@ else:
 gnn_model.eval()
 
 
-print("All models loaded successfully.")
+print("GNN model loaded.")
+print("Random Forest model loaded.")
+print("Graph loaded.")
+print("All models ready.")
 
 
 # ============================================================
-# 10. GNN PREDICTION
+# RISK
 # ============================================================
 
-def predict_gnn(features):
+def get_risk_level(
+    reliability
+):
 
-    # --------------------------------------------------------
-    # Scale the new input
-    # --------------------------------------------------------
-
-    scaled = scaler.transform(
-        np.array(features).reshape(1, -1)
+    reliability = float(
+        reliability
     )
 
-    scaled = scaled.astype(
-        np.float32
+    if reliability >= 70:
+
+        return "LOW"
+
+    elif reliability >= 40:
+
+        return "MEDIUM"
+
+    elif reliability >= 20:
+
+        return "HIGH"
+
+    else:
+
+        return "CRITICAL"
+
+
+# ============================================================
+# MAINTENANCE
+# ============================================================
+
+def get_maintenance_recommendation(
+    risk_level
+):
+
+    recommendations = {
+
+        "LOW":
+            "Continue normal grid monitoring.",
+
+        "MEDIUM":
+            "Increase monitoring frequency and inspect unusual parameters.",
+
+        "HIGH":
+            "Inspect grid parameters and consider preventive maintenance.",
+
+        "CRITICAL":
+            "Immediate inspection recommended. High instability risk detected."
+    }
+
+    return recommendations.get(
+        risk_level,
+        "Continue monitoring."
     )
 
 
-    # --------------------------------------------------------
-    # Existing graph features
-    # --------------------------------------------------------
+# ============================================================
+# VALIDATION
+# ============================================================
 
-    existing_x = graph.x.cpu().numpy()
+def validate_features(
+    features
+):
+
+    missing = []
+
+    for feature in FEATURE_NAMES:
+
+        if feature not in features:
+
+            missing.append(
+                feature
+            )
+
+    if missing:
+
+        return False, {
+
+            "error":
+                "Missing features",
+
+            "missing":
+                missing
+        }
 
 
-    # --------------------------------------------------------
-    # Add new node
-    # --------------------------------------------------------
+    try:
 
-    new_x = np.vstack([
-        existing_x,
-        scaled
-    ])
+        for feature in FEATURE_NAMES:
+
+            value = float(
+                features[feature]
+            )
+
+            if not np.isfinite(
+                value
+            ):
+
+                return False, {
+
+                    "error":
+                        f"Invalid value for {feature}"
+                }
+
+    except Exception:
+
+        return False, {
+
+            "error":
+                "All feature values must be numeric."
+        }
 
 
-    new_node_index = len(existing_x)
+    return True, None
 
 
-    # --------------------------------------------------------
-    # Find 8 nearest existing nodes
-    # --------------------------------------------------------
+# ============================================================
+# GNN PREDICTION
+# ============================================================
 
-    neighbors = NearestNeighbors(
+def predict_gnn(
+    features
+):
+
+    values = np.array(
+
+        [
+            float(
+                features[name]
+            )
+
+            for name in FEATURE_NAMES
+
+        ],
+
+        dtype=np.float32
+
+    ).reshape(
+        1,
+        -1
+    )
+
+
+    scaled_values = scaler.transform(
+        values
+    )
+
+
+    x_existing = graph_data.x.clone()
+
+
+    new_x = torch.tensor(
+        scaled_values,
+        dtype=torch.float32
+    )
+
+
+    # Find nearest neighbours
+
+    neighbors_model = NearestNeighbors(
         n_neighbors=8
     )
 
-    neighbors.fit(
-        existing_x
-    )
-
-    _, indices = neighbors.kneighbors(
-        scaled
+    neighbors_model.fit(
+        x_existing.numpy()
     )
 
 
-    # --------------------------------------------------------
-    # Create edges for new node
-    # --------------------------------------------------------
+    distances, indices = (
+        neighbors_model.kneighbors(
+            new_x.numpy()
+        )
+    )
+
+
+    nearest_nodes = indices[0]
+
+
+    # New node
+
+    new_node_index = (
+        x_existing.shape[0]
+    )
+
+
+    combined_x = torch.cat(
+
+        [
+            x_existing,
+            new_x
+        ],
+
+        dim=0
+    )
+
+
+    # New edges
+
+    existing_edges = (
+        graph_data.edge_index.clone()
+    )
+
 
     new_edges = []
 
-    for neighbor in indices[0]:
 
-        # New node -> existing node
-        new_edges.append([
-            new_node_index,
-            int(neighbor)
-        ])
+    for node in nearest_nodes:
 
-        # Existing node -> new node
-        new_edges.append([
-            int(neighbor),
-            new_node_index
-        ])
+        new_edges.append(
+            [
+                new_node_index,
+                int(node)
+            ]
+        )
 
-
-    # --------------------------------------------------------
-    # Combine original + new edges
-    # --------------------------------------------------------
-
-    original_edges = graph.edge_index.cpu().numpy()
-
-    new_edges = np.array(
-        new_edges
-    ).T
-
-    combined_edges = np.hstack([
-        original_edges,
-        new_edges
-    ])
+        new_edges.append(
+            [
+                int(node),
+                new_node_index
+            ]
+        )
 
 
-    # --------------------------------------------------------
-    # Convert to tensors
-    # --------------------------------------------------------
-
-    x_tensor = torch.tensor(
-        new_x,
-        dtype=torch.float
-    )
-
-    edge_tensor = torch.tensor(
-        combined_edges,
+    new_edges = torch.tensor(
+        new_edges,
         dtype=torch.long
+    ).t()
+
+
+    combined_edges = torch.cat(
+
+        [
+            existing_edges,
+            new_edges
+        ],
+
+        dim=1
     )
 
 
-    # --------------------------------------------------------
-    # GNN prediction
-    # --------------------------------------------------------
+    # Prediction
 
     with torch.no_grad():
 
         output = gnn_model(
-            x_tensor,
-            edge_tensor
+            combined_x,
+            combined_edges
         )
 
-        probabilities = F.softmax(
-            output,
-            dim=1
+
+        probabilities = torch.softmax(
+
+            output[
+                new_node_index
+            ],
+
+            dim=0
+
         )
 
-        prediction = output[
-            new_node_index
-        ].argmax().item()
 
-        stable_probability = probabilities[
-            new_node_index
-        ][0].item()
+        predicted_class = int(
 
-        unstable_probability = probabilities[
-            new_node_index
-        ][1].item()
+            torch.argmax(
+                probabilities
+            ).item()
+
+        )
 
 
-    if prediction == 0:
+    stable_probability = (
+        float(
+            probabilities[0].item()
+        )
+        * 100
+    )
 
-        status = "Stable"
 
-    else:
+    unstable_probability = (
+        float(
+            probabilities[1].item()
+        )
+        * 100
+    )
 
-        status = "Unstable"
 
+    prediction = (
 
-    # Reliability score is the model's
-    # predicted probability of stability.
+        "Stable"
+
+        if predicted_class == 0
+
+        else "Unstable"
+    )
+
 
     reliability_score = (
-        stable_probability * 100
+        stable_probability
+    )
+
+
+    risk_level = get_risk_level(
+        reliability_score
+    )
+
+
+    recommendation = (
+        get_maintenance_recommendation(
+            risk_level
+        )
     )
 
 
     return {
-        "prediction": status,
-        "stable_probability": round(
-            stable_probability * 100,
-            2
-        ),
-        "unstable_probability": round(
-            unstable_probability * 100,
-            2
-        ),
-        "reliability_score": round(
-            reliability_score,
-            2
-        )
+
+        "prediction":
+            prediction,
+
+        "reliability_score":
+            round(
+                reliability_score,
+                2
+            ),
+
+        "stable_probability":
+            round(
+                stable_probability,
+                2
+            ),
+
+        "unstable_probability":
+            round(
+                unstable_probability,
+                2
+            ),
+
+        "risk_level":
+            risk_level,
+
+        "maintenance_recommendation":
+            recommendation
     }
 
 
 # ============================================================
-# 11. RANDOM FOREST PREDICTION
+# RANDOM FOREST
 # ============================================================
 
-def predict_random_forest(features):
+def predict_random_forest(
+    features
+):
 
-    scaled = scaler.transform(
-        np.array(features).reshape(1, -1)
+    values = np.array(
+
+        [
+            float(
+                features[name]
+            )
+
+            for name in FEATURE_NAMES
+        ],
+
+        dtype=np.float32
+
+    ).reshape(
+        1,
+        -1
     )
 
-    prediction = rf_model.predict(
-        scaled
-    )[0]
 
-    probabilities = rf_model.predict_proba(
-        scaled
-    )[0]
+    scaled_values = scaler.transform(
+        values
+    )
 
 
-    if prediction == 0:
+    predicted_class = int(
 
-        status = "Stable"
+        rf_model.predict(
+            scaled_values
+        )[0]
 
-    else:
-
-        status = "Unstable"
+    )
 
 
-    stable_probability = probabilities[0]
+    probabilities = (
+        rf_model.predict_proba(
+            scaled_values
+        )[0]
+    )
 
-    unstable_probability = probabilities[1]
+
+    stable_probability = (
+        float(
+            probabilities[0]
+        )
+        * 100
+    )
+
+
+    unstable_probability = (
+        float(
+            probabilities[1]
+        )
+        * 100
+    )
+
+
+    prediction = (
+
+        "Stable"
+
+        if predicted_class == 0
+
+        else "Unstable"
+    )
+
+
+    # Feature importance
+
+    importances = (
+        rf_model.feature_importances_
+    )
+
+
+    feature_importance = []
+
+
+    for name, importance in zip(
+
+        FEATURE_NAMES,
+        importances
+
+    ):
+
+        feature_importance.append({
+
+            "feature":
+                name,
+
+            "importance":
+                round(
+                    float(
+                        importance
+                    ),
+                    4
+                )
+        })
+
+
+    feature_importance.sort(
+
+        key=lambda item:
+            item["importance"],
+
+        reverse=True
+    )
 
 
     return {
-        "prediction": status,
-        "stable_probability": round(
-            stable_probability * 100,
-            2
-        ),
-        "unstable_probability": round(
-            unstable_probability * 100,
-            2
-        )
+
+        "prediction":
+            prediction,
+
+        "stable_probability":
+            round(
+                stable_probability,
+                2
+            ),
+
+        "unstable_probability":
+            round(
+                unstable_probability,
+                2
+            ),
+
+        "feature_importance":
+            feature_importance
     }
 
 
 # ============================================================
-# 12. HOME ROUTE
+# HOME
 # ============================================================
 
-@app.route("/", methods=["GET"])
+@app.route(
+    "/",
+    methods=["GET"]
+)
+
 def home():
 
     return jsonify({
-        "message": "Smart Grid AI Reliability Prediction API",
-        "status": "running"
+
+        "project":
+            "AI-Based Reliability Prediction Framework for Smart Grid Cloud Applications",
+
+        "status":
+            "running",
+
+        "models": [
+
+            "Graph Neural Network",
+
+            "Random Forest"
+        ],
+
+        "features": [
+
+            "Reliability Prediction",
+
+            "Risk Classification",
+
+            "Model Agreement",
+
+            "Feature Importance",
+
+            "Predictive Maintenance",
+
+            "Fault Scenario Simulation",
+
+            "What-If Analysis",
+
+            "Real-Time Simulation"
+        ]
     })
 
 
 # ============================================================
-# 13. HEALTH CHECK
+# HEALTH
 # ============================================================
 
 @app.route(
     "/health",
     methods=["GET"]
 )
+
 def health():
 
     return jsonify({
-        "status": "healthy",
+
+        "status":
+            "healthy",
+
         "models": {
-            "gnn": "loaded",
-            "random_forest": "loaded"
+
+            "gnn":
+                "loaded",
+
+            "random_forest":
+                "loaded"
+        },
+
+        "graph": {
+
+            "nodes":
+                int(
+                    graph_data.x.shape[0]
+                ),
+
+            "edges":
+                int(
+                    graph_data.edge_index.shape[1]
+                )
         }
     })
 
 
 # ============================================================
-# 14. PREDICTION API
+# PREDICT
 # ============================================================
 
 @app.route(
     "/predict",
     methods=["POST"]
 )
+
 def predict():
 
     try:
 
-        data = request.get_json()
+        features = request.get_json()
 
 
-        if data is None:
+        if not features:
 
             return jsonify({
-                "error": "No JSON data received"
+
+                "error":
+                    "No JSON input received."
+
             }), 400
 
 
-        # ----------------------------------------------------
-        # Get 12 features
-        # ----------------------------------------------------
+        valid, error = (
+            validate_features(
+                features
+            )
+        )
 
-        features = []
 
-        for feature in FEATURES:
+        if not valid:
 
-            if feature not in data:
+            return jsonify(
+                error
+            ), 400
 
-                return jsonify({
-                    "error":
-                    f"Missing feature: {feature}"
-                }), 400
 
-            features.append(
-                float(data[feature])
+        gnn_result = (
+            predict_gnn(
+                features
+            )
+        )
+
+
+        rf_result = (
+            predict_random_forest(
+                features
+            )
+        )
+
+
+        models_agree = (
+
+            gnn_result[
+                "prediction"
+            ]
+
+            ==
+
+            rf_result[
+                "prediction"
+            ]
+        )
+
+
+        if models_agree:
+
+            model_agreement = "HIGH"
+
+        else:
+
+            model_agreement = (
+                "DISAGREEMENT"
             )
 
 
-        # ----------------------------------------------------
-        # Predictions
-        # ----------------------------------------------------
-
-        gnn_result = predict_gnn(
-            features
-        )
-
-        rf_result = predict_random_forest(
-            features
-        )
-
-
-        # ----------------------------------------------------
-        # Response
-        # ----------------------------------------------------
-
         return jsonify({
 
-            "input": {
-                feature: features[i]
-                for i, feature
-                in enumerate(FEATURES)
-            },
+            "success":
+                True,
 
-            "gnn": gnn_result,
+            "gnn":
+                gnn_result,
 
-            "random_forest": rf_result
+            "random_forest":
+                rf_result,
 
+            "model_agreement":
+                model_agreement,
+
+            "input_features":
+                features
         })
 
 
     except Exception as e:
 
+        print(
+            "Prediction error:",
+            str(e)
+        )
+
+
         return jsonify({
-            "error": str(e)
+
+            "success":
+                False,
+
+            "error":
+                str(e)
+
         }), 500
 
 
 # ============================================================
-# 15. RUN SERVER
+# SERVER
 # ============================================================
 
 if __name__ == "__main__":
 
-    print("\n========================================")
-    print("SMART GRID AI API")
-    print("========================================")
+    print(
+        "\nSmart Grid AI API running on port 9000..."
+    )
 
-    print("Server: http://127.0.0.1:9000")
-    print("Health: http://127.0.0.1:9000/health")
-    print("Prediction: POST /predict")
 
     app.run(
+
         host="0.0.0.0",
+
         port=9000,
-        debug=True
+
+        debug=False
     )
