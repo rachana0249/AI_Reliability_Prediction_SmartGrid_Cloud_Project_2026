@@ -1,4 +1,8 @@
-const API_URL = "http://54.234.211.0:9000";
+const API_URL =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://127.0.0.1:9000"
+        : "/api";
 
 const LAMBDA_API_URL =
     "https://q16uqkqopf.execute-api.us-east-1.amazonaws.com/smartgrid-prediction-trigger";
