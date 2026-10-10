@@ -1340,3 +1340,69 @@ document.addEventListener(
         );
     }
 );
+
+// ============================================================
+// ============================================================
+// LIVE GRID DATA — INDIA ENERGY ATLAS
+// ============================================================
+(() => {
+  const refreshButton = document.getElementById("refresh-grid-data");
+  if (!refreshButton) return;
+
+  const status = document.getElementById("grid-data-status");
+  const demand = document.getElementById("grid-national-demand");
+  const frequency = document.getElementById("grid-national-frequency");
+  const tamilNadu = document.getElementById("grid-tamilnadu-demand");
+  const timestamp = document.getElementById("grid-data-timestamp");
+
+  async function refreshGridData() {
+    refreshButton.disabled = true;
+    status.textContent = "Fetching latest published grid data…";
+
+    try {
+      const response = await fetch("/api/live-grid-data", {
+        cache: "no-store"
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.success !== true) {
+        throw new Error(result.error || `HTTP ${response.status}`);
+      }
+
+      const data = result.data || {};
+      const allIndia = data.all_india || {};
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      const tn = items.find(item =>
+        String(item.state || "").toLowerCase().replace(/\s+/g, " ").trim()
+          === "tamil nadu"
+      );
+
+      demand.textContent = allIndia.demand_mw != null
+        ? Number(allIndia.demand_mw).toLocaleString("en-IN") + " MW"
+        : "Not available";
+
+      frequency.textContent = allIndia.frequency_hz != null
+        ? Number(allIndia.frequency_hz).toFixed(3) + " Hz"
+        : "Not available";
+
+      tamilNadu.textContent = tn && tn.demand_mw != null
+        ? Number(tn.demand_mw).toLocaleString("en-IN") + " MW"
+        : "Not available";
+
+      timestamp.textContent =
+        allIndia.timestamp || data.as_of || "Timestamp not provided";
+
+      status.textContent =
+        "Grid data loaded successfully · Source: India Energy Atlas";
+    } catch (error) {
+      status.textContent = "Could not load grid data: " + error.message;
+    } finally {
+      refreshButton.disabled = false;
+    }
+  }
+
+  refreshButton.addEventListener("click", refreshGridData);
+  refreshGridData();
+})();
