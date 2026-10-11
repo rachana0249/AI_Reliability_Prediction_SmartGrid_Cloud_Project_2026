@@ -1354,10 +1354,74 @@ document.addEventListener(
   const frequency = document.getElementById("grid-national-frequency");
   const tamilNadu = document.getElementById("grid-tamilnadu-demand");
   const timestamp = document.getElementById("grid-data-timestamp");
+  const frequencyStatus = document.getElementById("grid-frequency-status");
+  const freshnessStatus = document.getElementById("grid-freshness-status");
+  const freshnessDetail = document.getElementById("grid-freshness-detail");
+
+  function setText(element, value) {
+    if (element) element.textContent = value;
+  }
+
+  function assessFrequency(value) {
+    if (value == null || !Number.isFinite(Number(value))) {
+      setText(frequencyStatus, "Unavailable");
+      if (frequencyStatus) frequencyStatus.dataset.state = "unknown";
+      return;
+    }
+
+    const hz = Number(value);
+    const withinBand = hz >= 49.90 && hz <= 50.05;
+
+    setText(
+      frequencyStatus,
+      withinBand
+        ? "WITHIN OPERATING BAND"
+        : "OUTSIDE OPERATING BAND"
+    );
+
+    if (frequencyStatus) {
+      frequencyStatus.dataset.state = withinBand ? "normal" : "warning";
+    }
+  }
+
+  function assessFreshness(rawTimestamp) {
+    const parsed = rawTimestamp ? Date.parse(rawTimestamp) : NaN;
+
+    if (!Number.isFinite(parsed)) {
+      setText(freshnessStatus, "Timestamp unavailable");
+      setText(freshnessDetail, "Cannot verify reading age");
+      if (freshnessStatus) freshnessStatus.dataset.state = "unknown";
+      return;
+    }
+
+    const ageMinutes = (Date.now() - parsed) / 60000;
+
+    if (ageMinutes < -5) {
+      setText(freshnessStatus, "Timestamp is in the future");
+      setText(freshnessDetail, "Check the provider timestamp");
+      if (freshnessStatus) freshnessStatus.dataset.state = "unknown";
+      return;
+    }
+
+    const age = Math.max(0, ageMinutes);
+
+    if (age <= 20) {
+      setText(freshnessStatus, "FRESH");
+      if (freshnessStatus) freshnessStatus.dataset.state = "normal";
+    } else if (age <= 60) {
+      setText(freshnessStatus, "DELAYED");
+      if (freshnessStatus) freshnessStatus.dataset.state = "warning";
+    } else {
+      setText(freshnessStatus, "STALE");
+      if (freshnessStatus) freshnessStatus.dataset.state = "danger";
+    }
+
+    setText(freshnessDetail, `Source reading age: ${Math.floor(age)} minute(s)`);
+  }
 
   async function refreshGridData() {
     refreshButton.disabled = true;
-    status.textContent = "Fetching latest published grid data…";
+    setText(status, "Fetching latest published grid data…");
 
     try {
       const response = await fetch("/api/live-grid-data", {
@@ -1379,25 +1443,45 @@ document.addEventListener(
           === "tamil nadu"
       );
 
-      demand.textContent = allIndia.demand_mw != null
-        ? Number(allIndia.demand_mw).toLocaleString("en-IN") + " MW"
-        : "Not available";
+      setText(
+        demand,
+        allIndia.demand_mw != null
+          ? Number(allIndia.demand_mw).toLocaleString("en-IN") + " MW"
+          : "Not available"
+      );
 
-      frequency.textContent = allIndia.frequency_hz != null
-        ? Number(allIndia.frequency_hz).toFixed(3) + " Hz"
-        : "Not available";
+      setText(
+        frequency,
+        allIndia.frequency_hz != null
+          ? Number(allIndia.frequency_hz).toFixed(3) + " Hz"
+          : "Not available"
+      );
 
-      tamilNadu.textContent = tn && tn.demand_mw != null
-        ? Number(tn.demand_mw).toLocaleString("en-IN") + " MW"
-        : "Not available";
+      setText(
+        tamilNadu,
+        tn && tn.demand_mw != null
+          ? Number(tn.demand_mw).toLocaleString("en-IN") + " MW"
+          : "Not available"
+      );
 
-      timestamp.textContent =
-        allIndia.timestamp || data.as_of || "Timestamp not provided";
+      const sourceTimestamp = allIndia.timestamp || data.as_of || null;
+      setText(timestamp, sourceTimestamp || "Timestamp not provided");
 
-      status.textContent =
-        "Grid data loaded successfully · Source: India Energy Atlas";
+      assessFrequency(allIndia.frequency_hz);
+      assessFreshness(sourceTimestamp);
+
+      setText(
+        status,
+        "Grid data loaded · Source: India Energy Atlas · Checked: " +
+          new Date().toLocaleTimeString()
+      );
     } catch (error) {
-      status.textContent = "Could not load grid data: " + error.message;
+      setText(status, "Could not load grid data: " + error.message);
+      setText(frequencyStatus, "Unavailable");
+      setText(freshnessStatus, "Unavailable");
+      setText(freshnessDetail, "Unable to verify the latest reading");
+      if (frequencyStatus) frequencyStatus.dataset.state = "unknown";
+      if (freshnessStatus) freshnessStatus.dataset.state = "unknown";
     } finally {
       refreshButton.disabled = false;
     }
@@ -1405,4 +1489,5 @@ document.addEventListener(
 
   refreshButton.addEventListener("click", refreshGridData);
   refreshGridData();
+  window.setInterval(refreshGridData, 30 * 1000);
 })();

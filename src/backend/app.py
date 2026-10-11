@@ -872,6 +872,53 @@ def predict():
 
         }), 500
 
+# ============================================================
+# LIVE GRID DATA — INDIA ENERGY ATLAS
+# ============================================================
+
+import requests
+
+@app.route("/live-grid-data", methods=["GET"])
+def live_grid_data():
+    api_key = os.environ.get("IEA_API_KEY")
+
+    if not api_key:
+        return jsonify({
+            "success": False,
+            "error": "IEA_API_KEY is not configured."
+        }), 500
+
+    url = "https://api.energymap.in/developer/v1/grid/demand/latest"
+
+    try:
+        response = requests.get(
+            url,
+            headers={"X-API-Key": api_key},
+            timeout=15
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        return jsonify({
+            "success": True,
+            "source": "India Energy Atlas",
+            "data": result.get("data", result)
+        })
+
+    except requests.RequestException as exc:
+        app.logger.exception("Live grid data request failed")
+        return jsonify({
+            "success": False,
+            "error": "Could not retrieve live grid data."
+        }), 502
+
+    except ValueError:
+        return jsonify({
+            "success": False,
+            "error": "The API returned invalid JSON."
+        }), 502
+
+
 
 # ============================================================
 # SERVER

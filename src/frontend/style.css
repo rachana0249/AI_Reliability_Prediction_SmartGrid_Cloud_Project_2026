@@ -1465,3 +1465,166 @@ section,
         font-size: 0.9rem;
     }
 }
+
+/* Live Smart Grid Monitoring — layout repair */
+#live-grid-data-panel {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 24px 0;
+    padding: 24px;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+#live-grid-data-panel h2 {
+    margin: 0 0 10px;
+    line-height: 1.3;
+}
+
+#live-grid-data-panel p {
+    line-height: 1.6;
+}
+
+#live-grid-data-panel #refresh-grid-data {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    margin: 18px 0;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+#live-grid-data-panel #grid-data-status {
+    margin: 12px 0;
+    overflow-wrap: anywhere;
+}
+
+#live-grid-data-panel #grid-national-demand,
+#live-grid-data-panel #grid-national-frequency,
+#live-grid-data-panel #grid-tamilnadu-demand,
+#live-grid-data-panel #grid-data-timestamp {
+    overflow-wrap: anywhere;
+}
+
+#live-grid-data-panel .grid-metrics,
+#live-grid-data-panel .grid-stats,
+#live-grid-data-panel .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 600px) {
+    #live-grid-data-panel {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    #live-grid-data-panel #refresh-grid-data {
+        min-height: 46px;
+    }
+}
+
+
+/* Live grid status indicators */
+#live-grid-data-panel .grid-status-cards {
+  margin-top: 20px;
+}
+
+#live-grid-data-panel .grid-status-cards article {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border-color, #dbe3ec);
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+
+#live-grid-data-panel [data-state="normal"] {
+  color: #16803d;
+  font-weight: 800;
+}
+
+#live-grid-data-panel [data-state="warning"] {
+  color: #b77900;
+  font-weight: 800;
+}
+
+#live-grid-data-panel [data-state="danger"] {
+  color: #c62828;
+  font-weight: 800;
+}
+
+#live-grid-data-panel [data-state="unknown"] {
+  color: #667085;
+  font-weight: 700;
+}
+
+#live-grid-data-panel .grid-status-cards small {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Smart Grid dashboard layout correction */
+#live-grid-data-panel .grid-monitoring-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+#live-grid-data-panel .grid-monitoring-cards article {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+
+#live-grid-data-panel .grid-monitoring-cards article h3 {
+  margin: 0 0 10px;
+}
+
+#live-grid-data-panel .grid-monitoring-cards article p {
+  margin: 0;
+}
+
+#live-grid-data-panel .grid-monitoring-cards article small {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Units are already included in the JavaScript values */
+#live-grid-data-panel .grid-monitoring-cards article > small {
+  /* Preserve explanatory text inside cards */
+}
+
+#live-grid-data-panel .grid-status-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+#live-grid-data-panel .grid-status-cards article {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 760px) {
+  #live-grid-data-panel .grid-monitoring-cards,
+  #live-grid-data-panel .grid-status-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  #live-grid-data-panel .grid-monitoring-cards,
+  #live-grid-data-panel .grid-status-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

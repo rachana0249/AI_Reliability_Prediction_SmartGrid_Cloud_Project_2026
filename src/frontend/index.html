@@ -741,11 +741,50 @@
 </main>
 
 
-<script
-    src="script.js"
-></script>
 
+<section class="card" id="live-grid-data-panel">
+  <h2>Live Smart Grid Monitoring</h2>
+  <p>Published Indian electricity-grid data from India Energy Atlas.
+     These are grid-level readings, not direct physical IoT sensor readings.</p>
+  <button id="refresh-grid-data" type="button">Refresh Grid Data</button>
+  <p id="grid-data-status" role="status">Not loaded yet</p>
+  <div class="grid-monitoring-cards">
+    <article>
+      <h3>All-India Demand</h3>
+      <p id="grid-national-demand">—</p>
+    </article>
+    <article>
+      <h3>Grid Frequency</h3>
+      <p id="grid-national-frequency">—</p>
+    </article>
+    <article>
+      <h3>Tamil Nadu Demand</h3>
+      <p id="grid-tamilnadu-demand">—</p>
+    </article>
+  </div>
+  <div class="grid-monitoring-cards grid-status-cards">
+    <article>
+      <h3>Frequency Assessment</h3>
+      <p id="grid-frequency-status" role="status">Waiting for data…</p>
+      <small>Reference band: 49.90–50.05 Hz</small>
+    </article>
+    <article>
+      <h3>Data Freshness</h3>
+      <p id="grid-freshness-status" role="status">Waiting for data…</p>
+      <small id="grid-freshness-detail">Source timestamp not checked</small>
+    </article>
+    <article>
+      <h3>AI Stability Prediction</h3>
+      <p id="grid-ai-status" role="status">Separate AI assessment</p>
+      <small>Use the existing 12-feature prediction form. Live demand and frequency alone are not valid inputs for this model.</small>
+    </article>
+  </div>
+  <p>Data timestamp: <span id="grid-data-timestamp">—</span></p>
+  <p>Source: <a href="https://www.energymap.in/" target="_blank"
+     rel="noopener noreferrer">India Energy Atlas</a></p>
+</section>
 
+<script src="script.js"></script>
 </body>
 
 </html>
